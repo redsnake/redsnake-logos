@@ -2,6 +2,7 @@ require 'bundler/setup'
 require 'prawn'
 
 $count  = 2
+$blue = false
 
 def build(number)
   height = 378
@@ -11,11 +12,13 @@ def build(number)
              margin:    0}
   padded_number = sprintf("%03d", number)
   Prawn::Document.generate("ticket#{padded_number}.pdf", options) do
-    # img = "logo-blue.jpg"
-    # fill_color "89A5CE"
-    # rectangle [0, height], width, height
-    # fill
-    # fill_color "000000"
+    if $blue
+      img = "logo-blue.jpg"
+      fill_color "89A5CE"
+      rectangle [0, height], width, height
+      fill
+      fill_color "000000"
+    end
 
     half_width = width / 2
     dash(1, space: 1)
