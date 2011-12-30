@@ -4,25 +4,26 @@ require 'prawn'
 $count  = 2
 $blue = false
 
-def build(number)
-  height = 378
-  width = 874
+$width = 874
+$height = 378
+$doc_options = {page_size: [$width, $height],
+                margin:    0}
+
+def build_front(number)
   img = "logo.jpg"
-  options = {page_size: [width, height],
-             margin:    0}
   padded_number = sprintf("%03d", number)
-  Prawn::Document.generate("ticket#{padded_number}.pdf", options) do
+  Prawn::Document.generate("ticket#{padded_number}.pdf", $doc_options) do
     if $blue
       img = "logo-blue.jpg"
       fill_color "89A5CE"
-      rectangle [0, height], width, height
+      rectangle [0, $height], $width, $height
       fill
       fill_color "000000"
     end
 
-    half_width = width / 2
+    half_width = $width / 2
     dash(1, space: 1)
-    line [half_width, 10], [half_width, height - 10]
+    line [half_width, 10], [half_width, $height - 10]
     stroke
 
     font "VeraMono.ttf"
@@ -37,18 +38,45 @@ def build(number)
 
     img_size = 260
     img_x = (half_width - img_size) / 2
-    img_y = height - ((height - img_size) / 2)
+    img_y = $height - (($height - img_size) / 2)
     image img, at: [img_x, img_y], width: img_size, height: img_size
     image img, at: [img_x + half_width, img_y], width: img_size, height: img_size
   end
 end
 
 task :tickets do
-  [1,200].each { |n| build(n) }
+  1.upto(200) { |n| build_front(n) }
+end
+
+task :ticket_back do
+  Prawn::Document.generate("ticket-back.pdf", $doc_options) do
+    half_width = $width / 2
+    dash(1, space: 1)
+    line [half_width, 10], [half_width, $height - 10]
+    stroke
+
+    font "Vera.ttf"
+
+    size = 24
+    text_box "Name:", at: [55, 320], size: size
+    text_box "Email:", at: [55, 320 - size - 100], size: size
+
+    text_box "RedSnakePhilly.org", at: [half_width + 35, 320], width: half_width - 35, size: 32
+    text_box <<-TXT.gsub(/^ {6}/, ''), at: [half_width + 35, 240], width: half_width - 35, size: size
+      6:00pm - Doors open
+
+      6:15pm - Reserved tickets
+
+
+      6:30pm - Talks start
+    TXT
+
+    text_box "expire", at: [half_width + 153, 160], size: size
+  end
 end
 
 task :clean do
   sh "rm ticket*"
 end
 
-task :default => :tickets
+task :default => [:tickets, :ticket_back]
