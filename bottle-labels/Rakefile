@@ -1,83 +1,115 @@
 require 'bundler/setup'
 require 'prawn'
 
-$count  = 2
-$blue = false
+$blue = true
 
-$width = 874
-$height = 378
+$phi = 1.618
+
+$height = 240
+$width = $height * $phi
+
 $doc_options = {
-  :page_size => [$width, $height],
+  :page_layout => :landscape,
   :margin    =>  0}
 
-def build_front(number)
-  img = "logo.jpg"
-  padded_number = sprintf("%03d", number)
-  Prawn::Document.generate("ticket#{padded_number}.pdf", $doc_options) do
-    if $blue
-      img = "logo-blue.jpg"
-      fill_color "89A5CE"
-      rectangle [0, $height], $width, $height
+$maroon = "5A2321"
+$blue   =  Prawn::Graphics::Color.rgb2hex([127, 166, 208])
+$white  = "000000"
+$batch_size = 48
+
+$num_labels = $batch_size * 3
+
+task :labels do
+
+  Prawn::Document.generate("labels.pdf", $doc_options) do
+    0.upto($num_labels - 1) { |number|
+      batch_no = number / $batch_size + 1
+
+      img_size = $height
+      half_width = $width / 2
+
+      # Put four labels on a page. pos 0 is top left, 1 is top right,
+      # 2 is bottom left, 3 is bottom right. Set x and y offsets
+      # accordingly.
+      pos = number % 4
+      off_y = pos == 0 || pos == 1 ? $height : 0
+      off_x = pos == 1 || pos == 3 ? $width: 0
+      off_y += 70
+      off_x += 8
+
+      # Size and margins for the left and right text boxes
+      text_side_margin =  5
+      text_top_margin  = 10
+      box_width = $height - text_top_margin * 2
+      box_height = 30
+
+      # Left text box position
+      text_left_x = off_x + text_side_margin + box_height
+      text_left_y = off_y + $height - text_top_margin
+
+      # Image position
+      img = "../logo/redsnake-logo-blue.png"
+      img_x = off_x + half_width - img_size / 2
+      img_y = off_y + $height - (($height - img_size) / 2)
+
+      # Right text box position
+      text_right_x = off_x + $width - box_width - box_height
+      text_right_y = off_y + $height - text_top_margin
+
+      # Draw a blue field for the whole label
+      rectangle [off_x, $height + off_y], $width, $height
+      fill_color $blue
       fill
       fill_color "000000"
-    end
 
-    half_width = $width / 2
-    dash(1, space: 1)
-    line [half_width, 10], [half_width, $height - 10]
-    stroke
+      font "../tickets/Vera.ttf"
+      size = 10
 
-    font "VeraMono.ttf"
-    box_width = 100
-    size = 32
-    [0,box_width].each do |offset|
-      text_box number.to_s, at: [half_width - offset, size + 50],
-                            width: box_width,
-                            align: :center,
-                            size: size
-    end
+      image img, at: [img_x, img_y], width: img_size, height: img_size
 
-    img_size = 260
-    img_x = (half_width - img_size) / 2
-    img_y = $height - (($height - img_size) / 2)
-    image img, at: [img_x, img_y], width: img_size, height: img_size
-    image img, at: [img_x + half_width, img_y], width: img_size, height: img_size
+      if $debug
+          stroke_rectangle [text_left_x, text_left_y], box_width, box_height
+      end
+      text_box("A crisp red ale brewed with rye and roasted barley, using Nugget and Chinook hops.",
+               at: [text_left_x, text_left_y],
+               width: box_width,
+               height: box_height,
+               align: :center,
+               size: size,
+               :rotate => 270
+             )
+
+
+
+      details = "12 fl. oz.      6% alc. / vol.\nbatch #" + batch_no.to_s
+      if $debug
+          stroke_rectangle [text_right_x, text_right_y], box_width, box_height
+      end
+      text_box(details,
+               at: [text_right_x, text_right_y],
+               width: box_width,
+               height: box_height,
+               align: :center,
+               size: size,
+               :rotate => 90,
+               :rotate_around => :upper_right
+             )
+
+      stroke do
+        stroke_color $maroon
+        rectangle [off_x, $height + off_y], $width, $height
+      end
+
+      if pos == 3 && number < $num_labels - 1
+          start_new_page()
+      end
+    }
   end
-end
 
-task :tickets do
-  1.upto(200) { |n| build_front(n) }
-end
-
-task :ticket_back do
-  Prawn::Document.generate("ticket-back.pdf", $doc_options) do
-    half_width = $width / 2
-    dash(1, space: 1)
-    line [half_width, 10], [half_width, $height - 10]
-    stroke
-
-    font "Vera.ttf"
-
-    size = 24
-    text_box "Name:", at: [55, 320], size: size
-    text_box "Email:", at: [55, 320 - size - 100], size: size
-
-    text_box "RedSnakePhilly.org", at: [half_width + 35, 320], width: half_width - 35, size: 32
-    text_box <<-TXT.gsub(/^ {6}/, ''), at: [half_width + 35, 240], width: half_width - 35, size: size
-      6:00pm - Doors open
-
-      6:15pm - Reserved tickets
-
-
-      6:30pm - Talks start
-    TXT
-
-    text_box "expire", at: [half_width + 153, 160], size: size
-  end
 end
 
 task :clean do
-  sh "rm ticket*"
+  sh "rm label*"
 end
 
-task :default => [:tickets, :ticket_back]
+task :default => [:labels]
