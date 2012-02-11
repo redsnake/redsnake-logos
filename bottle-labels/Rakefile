@@ -100,7 +100,7 @@ task :labels do
 
 
 
-      details = "12 fl. oz.      6% alc. / vol.\nbatch #" + batch_no.to_s
+      details = "12 fl. oz.      6.2% alc. / vol.\nbatch #" + batch_no.to_s
       if $debug
           stroke_rectangle [text_right_x, text_right_y], box_width, box_height
       end
