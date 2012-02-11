@@ -3,13 +3,13 @@ require 'prawn'
 
 $blue = true
 
-$phi = 1.618
+$phi = 1.25
 
 $height = 240
 $width = $height * $phi
 
 $doc_options = {
-  :page_layout => :landscape,
+#  :page_layout => :landscape,
   :margin    =>  0}
 
 $maroon = "5A2321"
@@ -19,29 +19,48 @@ $batch_size = 48
 
 $num_labels = $batch_size * 3
 
+$margin_x = 6
+$margin_y = 30
+
 task :labels do
 
   Prawn::Document.generate("labels.pdf", $doc_options) do
+
     0.upto($num_labels - 1) { |number|
+
+      pos = number % 6
+      if pos == 0
+        fill_color $blue
+        doc_width = $width * 2
+        doc_height = $height * 3
+        rectangle [$margin_x + -1, $margin_y + doc_height + 1], doc_width + 2, doc_height + 2
+        fill_color "000000"
+      end
+
+
+
       batch_no = number / $batch_size + 1
 
-      img_size = $height
+      img_size = $height * 0.8
       half_width = $width / 2
 
       # Put four labels on a page. pos 0 is top left, 1 is top right,
       # 2 is bottom left, 3 is bottom right. Set x and y offsets
       # accordingly.
-      pos = number % 4
-      off_y = pos == 0 || pos == 1 ? $height : 0
-      off_x = pos == 1 || pos == 3 ? $width: 0
-      off_y += 70
-      off_x += 8
+      pos = number % 6
+      off_y = (pos == 0 || pos == 1 ? $height * 2 :
+               pos == 2 || pos == 3 ? $height * 1 :
+               0)
+
+      off_x = (pos % 2) == 1 ? $width: 0
+      off_y += $margin_y
+      off_x += $margin_x
 
       # Size and margins for the left and right text boxes
       text_side_margin =  5
       text_top_margin  = 10
       box_width = $height - text_top_margin * 2
-      box_height = 30
+      box_height = 25
 
       # Left text box position
       text_left_x = off_x + text_side_margin + box_height
@@ -95,13 +114,21 @@ task :labels do
                :rotate_around => :upper_right
              )
 
-      stroke do
-        stroke_color $maroon
-        rectangle [off_x, $height + off_y], $width, $height
-      end
-
-      if pos == 3 && number < $num_labels - 1
-          start_new_page()
+      if pos == 5 && number < $num_labels - 1
+        0.upto(3) do |row|
+          0.upto(2) do |col|
+            stroke do
+              stroke_color $maroon
+              x = $margin_x + $width * col
+              y = $margin_y + $height * row
+              line [x - 1, y], [x + 1, y]
+              line [x, y - 1], [x, y + 1]
+            end
+          end
+        end
+        fill_color $blue
+        fill
+        start_new_page()
       end
     }
   end
