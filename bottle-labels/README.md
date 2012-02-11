@@ -1,6 +1,6 @@
 RedSnake Beer Labels
 ====================
 
-<img src="front.png"/>
+<img src="https://github.com/redsnake/redsnake-logos/blob/master/bottle-labels/front.jpg"/>
 
 
