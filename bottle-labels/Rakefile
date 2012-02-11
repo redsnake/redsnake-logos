@@ -3,7 +3,7 @@ require 'prawn'
 
 $blue = true
 
-$phi = 1.25
+$phi = 1.2
 
 $height = 240
 $width = $height * $phi
@@ -19,7 +19,7 @@ $batch_size = 48
 
 $num_labels = $batch_size * 3
 
-$margin_x = 6
+$margin_x = 15
 $margin_y = 30
 
 task :labels do
@@ -84,7 +84,7 @@ task :labels do
       font "../tickets/Vera.ttf"
       size = 10
 
-      image img, at: [img_x, img_y], width: img_size, height: img_size
+      image img, at: [img_x, img_y], width: img_size
 
       if $debug
           stroke_rectangle [text_left_x, text_left_y], box_width, box_height
