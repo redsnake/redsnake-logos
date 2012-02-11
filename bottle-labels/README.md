@@ -4,7 +4,7 @@ RedSnake Beer Labels
 Printable
 ---------
 
-<img src="https://github.com/redsnake/redsnake-logos/raw/master/bottle-labels/label.jpg"/>
+See <a href=="https://github.com/redsnake/redsnake-logos/raw/master/bottle-labels/label.pdf"/>
 
 Front
 -----
