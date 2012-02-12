@@ -13,7 +13,7 @@ $doc_options = {
   :margin    =>  0}
 
 $maroon = "5A2321"
-$blue   =  Prawn::Graphics::Color.rgb2hex([127, 166, 208])
+$blue   =  Prawn::Graphics::Color.rgb2hex([174, 200, 232])
 $white  = "000000"
 $batch_size = 48
 
@@ -67,9 +67,9 @@ task :labels do
       text_left_y = off_y + $height - text_top_margin
 
       # Image position
-      img = "../logo/redsnake-logo-blue.png"
+      img = "redsnake-logo-sm-3.png"
       img_x = off_x + half_width - img_size / 2
-      img_y = off_y + $height - (($height - img_size) / 2)
+      img_y = off_y + $height# - (($height - img_size) / 2)
 
       # Right text box position
       text_right_x = off_x + $width - box_width - box_height
@@ -114,7 +114,7 @@ task :labels do
                :rotate_around => :upper_right
              )
 
-      if pos == 5 && number < $num_labels - 1
+      if pos == 5
         0.upto(3) do |row|
           0.upto(2) do |col|
             stroke do
@@ -128,7 +128,9 @@ task :labels do
         end
         fill_color $blue
         fill
-        start_new_page()
+        if number < $num_labels - 1
+          start_new_page()
+        end
       end
     }
   end
