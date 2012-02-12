@@ -1,0 +1,142 @@
+require 'bundler/setup'
+require 'prawn'
+
+$blue = true
+
+$phi = 1.2
+
+$height = 240
+$width = $height * $phi
+
+$doc_options = {
+#  :page_layout => :landscape,
+  :margin    =>  0}
+
+$maroon = "5A2321"
+$blue   =  Prawn::Graphics::Color.rgb2hex([127, 166, 208])
+$white  = "000000"
+$batch_size = 48
+
+$num_labels = $batch_size * 3
+
+$margin_x = 15
+$margin_y = 30
+
+task :labels do
+
+  Prawn::Document.generate("labels.pdf", $doc_options) do
+
+    0.upto($num_labels - 1) { |number|
+
+      pos = number % 6
+      if pos == 0
+        fill_color $blue
+        doc_width = $width * 2
+        doc_height = $height * 3
+        rectangle [$margin_x + -1, $margin_y + doc_height + 1], doc_width + 2, doc_height + 2
+        fill_color "000000"
+      end
+
+
+
+      batch_no = number / $batch_size + 1
+
+      img_size = $height * 0.8
+      half_width = $width / 2
+
+      # Put four labels on a page. pos 0 is top left, 1 is top right,
+      # 2 is bottom left, 3 is bottom right. Set x and y offsets
+      # accordingly.
+      pos = number % 6
+      off_y = (pos == 0 || pos == 1 ? $height * 2 :
+               pos == 2 || pos == 3 ? $height * 1 :
+               0)
+
+      off_x = (pos % 2) == 1 ? $width: 0
+      off_y += $margin_y
+      off_x += $margin_x
+
+      # Size and margins for the left and right text boxes
+      text_side_margin =  5
+      text_top_margin  = 10
+      box_width = $height - text_top_margin * 2
+      box_height = 25
+
+      # Left text box position
+      text_left_x = off_x + text_side_margin + box_height
+      text_left_y = off_y + $height - text_top_margin
+
+      # Image position
+      img = "../logo/redsnake-logo-blue.png"
+      img_x = off_x + half_width - img_size / 2
+      img_y = off_y + $height - (($height - img_size) / 2)
+
+      # Right text box position
+      text_right_x = off_x + $width - box_width - box_height
+      text_right_y = off_y + $height - text_top_margin
+
+      # Draw a blue field for the whole label
+      rectangle [off_x, $height + off_y], $width, $height
+      fill_color $blue
+      fill
+      fill_color "000000"
+
+      font "../tickets/Vera.ttf"
+      size = 10
+
+      image img, at: [img_x, img_y], width: img_size
+
+      if $debug
+          stroke_rectangle [text_left_x, text_left_y], box_width, box_height
+      end
+      text_box("A crisp red ale brewed with rye and roasted barley, using Nugget and Chinook hops.",
+               at: [text_left_x, text_left_y],
+               width: box_width,
+               height: box_height,
+               align: :center,
+               size: size,
+               :rotate => 270
+             )
+
+
+
+      details = "12 fl. oz.      6.2% alc. / vol.\nbatch #" + batch_no.to_s
+      if $debug
+          stroke_rectangle [text_right_x, text_right_y], box_width, box_height
+      end
+      text_box(details,
+               at: [text_right_x, text_right_y],
+               width: box_width,
+               height: box_height,
+               align: :center,
+               size: size,
+               :rotate => 90,
+               :rotate_around => :upper_right
+             )
+
+      if pos == 5 && number < $num_labels - 1
+        0.upto(3) do |row|
+          0.upto(2) do |col|
+            stroke do
+              stroke_color $maroon
+              x = $margin_x + $width * col
+              y = $margin_y + $height * row
+              line [x - 1, y], [x + 1, y]
+              line [x, y - 1], [x, y + 1]
+            end
+          end
+        end
+        fill_color $blue
+        fill
+        start_new_page()
+      end
+    }
+  end
+
+end
+
+task :clean do
+  sh "rm label*"
+end
+
+task :default => [:labels]
